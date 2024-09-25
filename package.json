@@ -11,6 +11,7 @@
   "description": "",
   "dependencies": {
     "git-cz": "^4.9.0",
-    "puppeteer": "^23.4.0"
+    "puppeteer": "^23.4.0",
+    "readline-sync": "^1.4.10"
   }
 }

@@ -1,57 +1,100 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 
+const moedas = [
+    {
+        "cod": "BRL", "nome": "real"
+    },
+    {
+        "cod": "USD", "nome": "dolar"
+    },
+    {
+        "cod": "EUR", "nome": "euro"
+    },
+    {
+        "cod": "BTC", "nome": "bitcoin"
+    },
+    {
+        "cod": "btc", "nome": "%bitcoin"
+    },
+]
+
+const getCurrencyUrl = (moeda) => {
+    const url = `https://www.google.com.br/search?q=${moeda}+para+real&sca_esv=2ffed2e4f72d7567&sca_upv=1&sxsrf=ADLYWIKxyP0HUdrmB-oSNt40h5pBTCTAAg%3A1727215359785&ei=_zbzZr_GL_eq1sQPqI2N-A8&ved=0ahUKEwj_weHPytyIAxV3lZUCHahGA_8Q4dUDCA8&uact=5&oq=${moeda}+para+real&gs_lp=Egxnd3Mtd2l6LXNlcnAiEWJpdGNvaW4gcGFyYSByZWFsMgoQIxiABBgnGIoFMgQQIxgnMgUQABiABDIFEAAYgAQyBhAAGAcYHjIGEAAYBxgeMgUQABiABDIGEAAYBRgeMgYQABgFGB4yBhAAGAUYHkiEDFAAWK0KcAd4AJABAJgBAKABAKoBALgBA8gBAPgBAZgCB6ACEsICBxAjGLECGCfCAgcQABiABBgKwgIIEAAYBRgHGB7CAgcQABiABBgNwgIJEAAYgAQYChgNwgIIEAAYChgNGB7CAgwQIxiwAhgnGEYYggLCAgcQIxiwAhgnwgIWEAAYsAIYRhiCAhiXBRiMBRjdBNgBAZgDALoGBggBEAEYE5IHATegBwA&sclient=gws-wiz-serp`
+
+    // `https://www.google.com.br/search?q=bitcoin+para+real&sca_esv=2ffed2e4f72d7567&sca_upv=1&sxsrf=ADLYWIKxyP0HUdrmB-oSNt40h5pBTCTAAg%3A1727215359785&ei=_zbzZr_GL_eq1sQPqI2N-A8&ved=0ahUKEwj_weHPytyIAxV3lZUCHahGA_8Q4dUDCA8&uact=5&oq=bitcoin+para+real&gs_lp=Egxnd3Mtd2l6LXNlcnAiEWJpdGNvaW4gcGFyYSByZWFsMgoQIxiABBgnGIoFMgQQIxgnMgUQABiABDIFEAAYgAQyBhAAGAcYHjIGEAAYBxgeMgUQABiABDIGEAAYBRgeMgYQABgFGB4yBhAAGAUYHkiEDFAAWK0KcAd4AJABAJgBAKABAKoBALgBA8gBAPgBAZgCB6ACEsICBxAjGLECGCfCAgcQABiABBgKwgIIEAAYBRgHGB7CAgcQABiABBgNwgIJEAAYgAQYChgNwgIIEAAYChgNGB7CAgwQIxiwAhgnGEYYggLCAgcQIxiwAhgnwgIWEAAYsAIYRhiCAhiXBRiMBRjdBNgBAZgDALoGBggBEAEYE5IHATegBwA&sclient=gws-wiz-serp`
+
+    //https://br.investing.com/crypto/bitcoin/btc-brl-converter
+    //https://br.investing.com/currencies/usd-brl
+
+    return url
+}
+
+const getVariationUrl = (moedaPercent) => {
+    const urlPorcentagem = `https://br.investing.com/crypto/bitcoin/${moedaPercent}-brl-converter`
+
+    return urlPorcentagem
+}
+
 async function scrapeCryptoData() {
     try {
-        const browser = await puppeteer.launch();
+        const browser = await puppeteer.launch({headless: true});
         const page = await browser.newPage();
-        const valorBitcoinBase = 'Bitcoin'
-        const valorBitcoinFinal = 'Real'
-        const URLbit = `https://www.google.com.br/search?q=${valorBitcoinBase}+para+${valorBitcoinFinal}&sca_esv=a132f53bdbf2e8af&sca_upv=1&sxsrf=ADLYWIIHpeNk1YroQgjjA1Zjqf5avJWLew%3A1727135626989&ei=iv_xZpb4O8j41sQPzIzeiQk&ved=0ahUKEwiW5ZnModqIAxVIvJUCHUyGN5EQ4dUDCA8&uact=5&oq=${valorBitcoinBase}+para+${valorBitcoinFinal}&gs_lp=Egxnd3Mtd2l6LXNlcnAiEWJpdGNvaW4gcGFyYSByZWFsMhAQABiABBixAxiDARhGGIICMgUQABiABDIGEAAYFhgeMgYQABgWGB4yBhAAGBYYHjIGEAAYFhgeMgYQABgWGB4yBhAAGBYYHjIGEAAYFhgeMgYQABgWGB4yHBAAGIAEGLEDGIMBGEYYggIYlwUYjAUY3QTYAQFIw2RQohJY2FdwBHgBkAEAmAHPAaABsBWqAQYzLjIwLjG4AQPIAQD4AQGYAhygAoMWwgIKEAAYsAMY1gQYR8ICDRAAGIAEGLADGEMYigXCAgYQABgHGB7CAhMQLhiABBixAxiDARjHARgKGK8BwgIIEAAYExgHGB7CAgoQIxiABBgnGIoFwgIQEAAYgAQYsQMYQxiDARiKBcICCxAAGIAEGLEDGIMBwgIIEAAYgAQYsQPCAgQQIxgnwgIKEAAYgAQYQxiKBcICERAuGIAEGLEDGNEDGIMBGMcBwgIQEC4YgAQY0QMYQxjHARiKBcICEBAuGIAEGLEDGEMYgwEYigXCAg0QLhiABBixAxhDGIoFwgIQEAAYgAQYsQMYgwEYFBiHAsICFBAuGIAEGLEDGNEDGIMBGMcBGIoFwgILEC4YgAQYsQMYgwHCAgoQABiABBgUGIcCwgIIEAAYgAQYywGYAwCIBgGQBgq6BgYIARABGBOSBwY1LjIyLjGgB9q1AQ&sclient=gws-wiz-serp`
-        const URLsite = `https://www.google.com/finance/quote/BTC-BRL?sa=X&ved=2ahUKEwi0msGLq9qIAxXcqZUCHfHbB14Q-fUHegQIGhAf`
-        await page.goto(URLbit);
-        await page.goto(URLsite);
-        
-        const convertBit = await page.evaluate (() => { 
-            return document.querySelector('.cilsF.a61j6').textContent
-        });
-        const variationBIT24h = await page.evaluate (() => {
-            return document.querySelector('.JwB6zf').textContent
-        });
 
-        console.log(`O preço atual do Bitcoin em reais é ${convertBit}`);
-        console.log(`A variação do Bitcoin nas últimas 24h foi de ${variationBIT24h}`);
+        const URLconversorBit = getCurrencyUrl(moedas[3].nome)
+        
+        await page.goto(URLconversorBit);
+        
+        // Corrigido o seletor e o método de obtenção do valor
+        const bitcoinValue = await page.$eval('.pclqee', el => el.textContent);
+        console.log(`O preço atual do Bitcoin em Reais é ${bitcoinValue}`);
+
+        const URLporcentagemBit = getVariationUrl(moedas[4].cod)
+        await page.goto(URLporcentagemBit);
+        
+        // Corrigido o seletor e o método de obtenção da variação
+        const bitcoinVariation = await page.$eval('.arial_20.greenFont.pid-1024807-pcp.parentheses', el => el.textContent);
+        console.log(`A variação do Bitcoin nas últimas 24h foi de ${bitcoinVariation}`);
 
         await browser.close();
     } catch (error) {
-        console.log('Ocorreu um erro.', error);
+        console.error('Ocorreu um erro ao obter dados do Bitcoin:', error);
     }
 }
 
+/*
+    //https://br.investing.com/crypto/bitcoin/btc-brl-converter
+    //https://br.investing.com/currencies/usd-brl
+
+const getVariationUrlDOL = (moedaPercent) => {
+    const urlPorcentagem = `https://www.google.com/finance/quote/${moedaPercent}-BRL?sa=X&ved=2ahUKEwi0msGLq9qIAxXcqZUCHfHbB14Q-fUHegQIGhAf`
+
+    return urlPorcentagem
+}*/  //TODO need rework
+
 async function scrapeDollarData() {
     try {
-        const browser = await puppeteer.launch();
+        const browser = await puppeteer.launch({headless: true});
         const page = await browser.newPage();
-        const valorDolarBase = 'Dolar'
-        const valorDolarFinal = 'Real'
-        const URLdol = `https://www.google.com.br/search?q=${valorDolarBase}+para+${valorDolarFinal}&sca_esv=a132f53bdbf2e8af&sca_upv=1&sxsrf=ADLYWIKhgSzdGsAX9FmCxnxTA92euBmJ6A%3A1727135743651&ei=___xZtK8J7Dw1sQPy56E8A0&oq=${valorDolarBase}+para+${valorDolarFinal}&gs_lp=Egxnd3Mtd2l6LXNlcnAiD2RvbGFyIHBhcmEgcmVhbCoCCAAyEBAAGIAEGLEDGEMYgwEYigUyChAAGIAEGEMYigUyBRAAGIAEMgYQABgHGB4yBRAAGIAEMgYQABgHGB4yBRAAGIAEMgUQABiABDIGEAAYBxgeMgUQABiABEjYC1AAWKgEcAB4AZABAJgBdqABrwSqAQMwLjW4AQHIAQD4AQGYAgWgAr4EwgINEAAYgAQYsQMYgwEYDcICBxAAGIAEGA3CAggQABgTGAcYHpgDAJIHAzAuNaAHvR8&sclient=gws-wiz-serp` 
-        const URLsite = `https://www.google.com/finance/quote/USD-BRL?sa=X&ved=2ahUKEwiF89n-qdqIAxXKvJUCHfUPPXMQmY0JegQIJxAw`
-        await page.goto(URLdol);
-        await page.goto(URLsite);
 
-        const converDOL = await page.evaluate (() => { 
-            return document.querySelector('.lWzCpb.a61j6').textContent
-        });
-        const variationDOL24h = await page.evaluate (() => {
-            return document.querySelector('.JwB6zf').textContent
-        });
+        const URLconversorDOL = getCurrencyUrl(moedas[1].nome)
+        
+        await page.goto(URLconversorDOL);
+        
+        // Corrigido o seletor e o método de obtenção do valor
+        const dollarValue = await page.$eval('.DFlfde.SwHCTb', el => el.textContent);
+        console.log(`O preço atual do Dólar em Reais é ${dollarValue}`);
 
-        console.log(`O preço atual do dólar em reais é R$ ${converDOL}`);
-        console.log(`A variação do dólar nas últimas 24h é de ${variationDOL24h}`);
+        const URLporcentagemDOL = getVariationUrlDOL(moedas[1].cod)
+        await page.goto(URLporcentagemDOL);
+        
+        // Corrigido o seletor e o método de obtenção da variação
+        const dollarVariation = await page.$eval('.JwB6zf', el => el.textContent);
+        console.log(`A variação do Dólar nas últimas 24h foi de ${dollarVariation}`);
     
         await browser.close();
     } catch (error) {
-        console.log('Ocorreu um erro.', error);
+        console.error('Ocorreu um erro ao obter dados do Dólar:', error);
     }
 }
 
@@ -61,5 +104,7 @@ async function main() {
 }
 
 //TODO fix errors
+//TODO try to apply TypeScript
+//TODO fix variation %
 
 main();
