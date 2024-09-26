@@ -1,5 +1,14 @@
 const puppeteer = require('puppeteer');
-const fs = require('fs');
+
+
+// Inicializar server
+const express = require('express');
+const cors = require('cors');
+
+const app = express();
+const port = 5000;
+
+app.use(cors());
 
 const moedas = [
     {
@@ -28,6 +37,12 @@ const getVariationUrl = (moedaPercent) => {
     return urlPorcentagem
 }
 
+const getVariationUrlDOL = (moedaPercent) => {
+    const urlPorcentagem = `https://br.tradingview.com/symbols/${moedaPercent}BRL/`
+
+    return urlPorcentagem
+}
+
 async function scrapeCryptoData() {
     try {
 
@@ -50,17 +65,12 @@ async function scrapeCryptoData() {
         console.log(`A variação do Bitcoin nas últimas 24h foi de ${bitcoinVariation}`);
 
         await browser.close();
+        
+        return { value: bitcoinValue, variation: bitcoinVariation };
+
     } catch (error) {
         console.error('Ocorreu um erro ao obter dados do Bitcoin:', error);
     }
-}
-
-
-
-const getVariationUrlDOL = (moedaPercent) => {
-    const urlPorcentagem = `https://br.tradingview.com/symbols/${moedaPercent}BRL/`
-
-    return urlPorcentagem
 }
 
 async function scrapeDollarData() {
@@ -85,16 +95,33 @@ async function scrapeDollarData() {
         console.log(`A variação do Dólar nas últimas 24h foi de ${dollarVariation}`);
     
         await browser.close();
+        
+        return { value: dollarValue, variation: dollarVariation };
+        
     } catch (error) {
         console.error('Ocorreu um erro ao obter dados do Dólar:', error);
     }
 }
 
-async function main() {
-    await scrapeCryptoData();
-    await scrapeDollarData();
-}
+// https://localhost:
+app.get('/api/dataBIT', async (req, res) => {
+    try {
+        const bitcoinData = await scrapeCryptoData();
+        res.json({ bitcoinData });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao obter dados' });
+    }
+});
 
-//TODO try to apply TypeScript
+app.get('/api/dataDOL', async (req, res) => {
+    try {
+        const dollarData = await scrapeDollarData();
+        res.json({ dollarData });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao obter dados' });
+    }
+});
 
-main();
+app.listen(port, () => {
+    console.log(`Servidor rodando em http://localhost:${port}`);
+});
