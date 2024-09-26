@@ -14,7 +14,7 @@ section {
     padding: 15px;
     width: 500px;
     margin: auto;
-    box-shadow: 5px 5px 10px black;
+    box-shadow: 5px 5px 10px #B87333;
     font: normal 18pt arial;
 }
 
@@ -22,4 +22,45 @@ footer {
     color: aliceblue;
     text-align: center;
     font-style: normal;
+}
+
+#options {
+    text-align: center;
+    background-color: #D3D3D3;
+    border-radius: 10px;
+    width: 300px;
+    margin: auto;
+    box-shadow: 5px 5px 10px black;
+    font: italic 18pt times;
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+
+.dad {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 30px;
+    margin-bottom: 5px;
+}
+
+.verifybutton {
+    background-color: #D3D3D3;
+    border-radius: 10px;
+    padding: 7px;
+    cursor: pointer;
+    transition: all;
+    font-size: 18px;
+    font-weight: 500;
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+.verifybutton:hover {
+    background-color: #B87333;
+}
+
+#par {
+    text-align: center;
+    font: normal 20pt arial;
 }

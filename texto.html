@@ -12,17 +12,38 @@
 <body>
 
     <header>
-        <h1>Dolar and Bitcoin Informations</h1>
+        <h1>Dolar and Bitcoin Informations 💸🪙</h1>
     </header>
 
     <section>
 
         <div>
 
+            <p id="par">
+
+                Hi! Please select a coin:
+
+            </p>
+
+            <p id="options">
+
+                <input type="radio" name="moeda" id="BIT" checked>
+                <label for="BIT">🪙 Bitcoin</label>
+                <input type="radio" name="moeda" id="DOL">
+                <label for="DOL">💸 Dollar</label>
+
+            </p>
+
+            <div class="dad">
+
+                <button class="verifybutton" onclick="main()">Verify</button>
+
+            </div>
+
         </div>
     
-        <div>
-    
+        <div id="result">
+
         </div>
         
     </section>
@@ -31,7 +52,64 @@
         <p>&COPY;Zanini</p>
     </footer>
 
-    <script src="index.js"></script>
+    <script>
+
+        function getRadioId(){
+            const selectedRadio = document.querySelector('input[name="moeda"]:checked');
+            return selectedRadio ? selectedRadio.id : null;
+
+            // if(selectedRadio != null){
+            //     return selectedRadio.id
+            // }
+            // else{
+            //     return null
+            // }
+        }
+
+        function attHTML(moeda, dado) {
+            dado.variation = dado.variation.replace('%', '').replace(',','.');
+            console.log(dado.variation)
+            const resultDiv = document.getElementById('result');
+            let ehVermelho = false
+            
+            if(dado.variation.startsWith('-')){
+                console.log("comeca com -")
+                dado.variation = dado.variation.replace('-','')
+                dado.variation = parseFloat(dado.variation);
+                ehVermelho = true
+            }
+            
+            const estiloVermelho = ehVermelho === true ? "style='color: red'" : "style='color: green'"
+            const sinal = ehVermelho ? "-" : ""
+            resultDiv.innerHTML = `
+                <h2>${moeda}</h2>
+                <p>O preço atual do ${moeda} em Reais é ${dado.value}</p>
+                <p>A variação do ${moeda} nas últimas 24h foi de <p ${estiloVermelho}>${sinal}${dado.variation}%</p></p>
+            `;
+        }
+
+        async function main() {
+            try {
+                const radioIdSelecionado = getRadioId()
+                const response = await fetch(`http://localhost:5000/api/data${radioIdSelecionado}`);
+                const data = await response.json();
+                if (data.bitcoinData) {
+                    attHTML("Bitcoin", data.bitcoinData);
+                } 
+                else if (data.dollarData) {
+                    attHTML("Dólar", data.dollarData);
+                } 
+                
+                else {
+                    throw new Error('Dados inválidos');
+                }
+            } catch (error) {
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = 'Ocorreu um erro ao carregar os dados';
+            }
+        }
+
+    </script>
     
 </body>
 </html>
